@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -18,7 +19,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Verify submodule
+      - name: Verify submodules
         run: |
           echo "=== JNI ==="
           ls -la app/src/main/jni || true
@@ -32,7 +33,7 @@ jobs:
           echo "=== moonlight-common-c/src ==="
           ls -la app/src/main/jni/moonlight-core/moonlight-common-c/src || true
 
-      - name: Set up JDK 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -41,8 +42,24 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Accept SDK Licenses
+        run: yes | sdkmanager --licenses
 
       - name: Install NDK
-        run: sdkmanager "ndk;27.0.120
+        run: |
+          sdkmanager "ndk;26.3.11579264"
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: MayXCloud-Remote
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/**/*.apk
