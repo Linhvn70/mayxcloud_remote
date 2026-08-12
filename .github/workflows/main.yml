@@ -1,0 +1,48 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository + submodules
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Verify submodule
+        run: |
+          echo "=== JNI ==="
+          ls -la app/src/main/jni || true
+
+          echo "=== moonlight-core ==="
+          ls -la app/src/main/jni/moonlight-core || true
+
+          echo "=== moonlight-common-c ==="
+          ls -la app/src/main/jni/moonlight-core/moonlight-common-c || true
+
+          echo "=== moonlight-common-c/src ==="
+          ls -la app/src/main/jni/moonlight-core/moonlight-common-c/src || true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install NDK
+        run: sdkmanager "ndk;27.0.120
